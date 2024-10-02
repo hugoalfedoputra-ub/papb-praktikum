@@ -1,6 +1,7 @@
 package com.example.ch2p
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,6 +16,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -31,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import com.example.ch2p.ui.theme.CH2PTheme
 
 class ListActivity : ComponentActivity() {
@@ -59,6 +63,18 @@ fun M5Screen(modifier: Modifier = Modifier) {
                 ),
                 title = {
                     Text("Jadwal Kuliah")
+                },
+                actions = {
+                    Button(onClick = {
+                        context.startActivity(
+                            Intent(
+                                context,
+                                ProfileActivity::class.java
+                            )
+                        )
+                    }) {
+                        Icon(Icons.Outlined.AccountCircle, "My profile")
+                    }
                 }
             )
         },

@@ -22,6 +22,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "GITHUB_API_BASE_URL", "\"https://api.github.com\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -40,6 +43,7 @@ android {
     buildFeatures {
         compose = true
         viewBinding = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -89,9 +93,10 @@ dependencies {
     // Also add the dependency for the Google Play services library and specify its version
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
-    implementation("androidx.credentials:credentials:<latest version>")
-    implementation("androidx.credentials:credentials-play-services-auth:<latest version>")
-    implementation("com.google.android.libraries.identity.googleid:googleid:<latest version>")
-
-
+    implementation(libs.retrofit)
+    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation(libs.logging.interceptor)
+    implementation("io.coil-kt:coil:2.7.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 }

@@ -291,6 +291,17 @@ fun AppContent(onSignOut: () -> Unit) {
                         context.startActivity(intent)
                     })
             }
+            composable(route = WeeklyScreens.M6.name) {
+                M6Screen(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    onLaunchListActivity = {
+                        // Lambda to launch ListActivity
+                        val intent = Intent(context, ProfileActivity::class.java)
+                        context.startActivity(intent)
+                    })
+            }
         }
     }
 }
@@ -407,6 +418,21 @@ fun M5Screen(modifier: Modifier = Modifier, onLaunchListActivity: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Buka ListActivity")
+        }
+    }
+}
+
+@Composable
+fun M6Screen(modifier: Modifier = Modifier, onLaunchListActivity: () -> Unit) {
+    // Example Button to launch ListActivity (if needed)
+    Column(
+        modifier = modifier // Optional: Make the Row/Column fill the width
+    ) {
+        Button(
+            onClick = onLaunchListActivity,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Buka Profilku")
         }
     }
 }

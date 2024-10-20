@@ -1,4 +1,4 @@
-package com.example.ch2p
+package com.example.ch2p.view.model
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -54,7 +54,7 @@ class ProfileViewModel : ViewModel() {
                         _repoDetail.value = response.body()!!
                     } else {
                         Log.e("ProfileViewModel", "Repo Error: ${response.code()} - ${response.message()}")
-                        _repoDetail.value = emptyList() // You might want to handle error cases differently
+                        _repoDetail.value = emptyList()
                     }
                 }
 

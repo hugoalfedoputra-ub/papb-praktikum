@@ -1,7 +1,6 @@
-package com.example.ch2p
+package com.example.ch2p.view
 
 import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -24,13 +23,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
@@ -58,17 +61,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.ch2p.R
 import com.example.ch2p.ui.theme.CH2PTheme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -78,21 +86,19 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.launch
 
 enum class WeeklyScreens {
-    M2,
-    M3,
-    M4,
-    M5,
-    M6,
-    M7,
-    M8,
-    M9,
-    M10,
-    M11,
-    M12,
+    M2, M3, M4,
+//    M5, M6, M7, M8, M9, M10, M11, M12,
 }
+
+enum class MainMenu {
+    Matkul, Tugas, Arsip, Profil
+}
+
+val mainMenuIcons: List<ImageVector> =
+    listOf(Icons.Filled.DateRange, Icons.Filled.Build, Icons.Filled.Info, Icons.Filled.Person)
+
 
 class MainActivity : ComponentActivity() {
 
@@ -129,23 +135,19 @@ class MainActivity : ComponentActivity() {
         }
 
         if (showSignOutDialog) {
-            SignOutConfirmationDialog(
-                onConfirm = {
-                    // Sign out user
-                    auth.signOut()
-                    isLoggedIn.value = auth.currentUser
-                    showSignOutDialog = false
-                },
-                onCancel = { showSignOutDialog = false }
-            )
+            SignOutConfirmationDialog(onConfirm = {
+                // Sign out user
+                auth.signOut()
+                isLoggedIn.value = auth.currentUser
+                showSignOutDialog = false
+            }, onCancel = { showSignOutDialog = false })
         }
     }
 }
 
 @Composable
 fun SignOutConfirmationDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onCancel,
+    AlertDialog(onDismissRequest = onCancel,
         title = { Text("Sign Out") },
         text = { Text("Apakah Anda yakin ingin sign out?") },
         confirmButton = {
@@ -153,8 +155,7 @@ fun SignOutConfirmationDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
         },
         dismissButton = {
             TextButton(onClick = onCancel) { Text("Cancel") }
-        }
-    )
+        })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -164,100 +165,169 @@ fun AppContent(onSignOut: () -> Unit) {
     // Get current back stack entry
     val backStackEntry by navController.currentBackStackEntryAsState()
     // Get the name of the current screen
-    val currentScreen = WeeklyScreens.valueOf(
-        backStackEntry?.destination?.route ?: WeeklyScreens.M2.name
+    val currentScreen = MainMenu.valueOf(
+        backStackEntry?.destination?.route ?: MainMenu.Matkul.name
     )
 
-    Scaffold(
-        topBar = {
-            @OptIn(ExperimentalMaterial3Api::class)
-            TopAppBar(
-                title = {
-                    Text("Tugas $currentScreen")
-                }
-            )
-        },
-        bottomBar = {
-            val currentRoute =
-                navController.currentBackStackEntryAsState().value?.destination?.route
-            currentRoute ?: WeeklyScreens.M2.name
-
-            val context = LocalContext.current
-            val googleSignInClient = remember { // Remember the client
-                GoogleSignIn.getClient(context, GoogleSignInOptions.DEFAULT_SIGN_IN)
+    Scaffold(topBar = {
+        TopAppBar(title = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("$currentScreen")
+                Column { NamaMhs("Hugo Alfedo Putra", "225150201111013", fontSize = 14.sp) }
             }
-            val coroutineScope = rememberCoroutineScope()
+        })
+    }, bottomBar = {
+        val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+        currentRoute ?: MainMenu.Matkul.name
 
-            Column(Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
+        BottomAppBar(actions = {
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                itemsIndexed(MainMenu.entries) { i, item ->
+                    TextButton(
+                        onClick = {
                             try {
-                                // Firebase sign-out
-                                Firebase.auth.signOut()
-
-                                // Google Sign-In client sign-out
-                                googleSignInClient.signOut().addOnCompleteListener {
-                                    // Update UI or perform actions after sign-out
-                                    onSignOut()
+                                navController.navigate(item.name) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
                             } catch (e: Exception) {
-                                Log.e("SignOut", "Error signing out: ", e)
+                                navController.navigate(MainMenu.Matkul.name) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp) // Add padding
-                ) {
-                    Text("Sign Out")
-                }
-                BottomAppBar(actions = {
-                    LazyRow(
-                        verticalAlignment = Alignment.CenterVertically
+                        }, colors = ButtonDefaults.textButtonColors(
+                            contentColor = if (currentRoute == item.name) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                Color.Gray
+                            }
+                        )
                     ) {
-                        items(WeeklyScreens.entries) { item ->
-                            TextButton(
-                                onClick = {
-                                    try {
-                                        navController.navigate(item.name) {
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                saveState = true
-                                            }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    } catch (e: Exception) {
-                                        navController.navigate(WeeklyScreens.M2.name) {
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                saveState = true
-                                            }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    }
-                                },
-                                colors = ButtonDefaults.textButtonColors(
-                                    contentColor = if (currentRoute == item.name) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        Color.Gray
-                                    }
-                                )
-                            ) {
-                                Text("$item", fontSize = 20.sp)
-                            }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(mainMenuIcons[i], contentDescription = item.name)
+                            Text("$item", fontSize = 20.sp)
                         }
+
                     }
-                })
+                }
             }
-        },
-        modifier = Modifier.fillMaxSize()
+        })
+
+    }, modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         val context = LocalContext.current
         NavHost(
             navController = navController,
-            startDestination = WeeklyScreens.M5.name,
+            startDestination = MainMenu.Matkul.name,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            composable(route = MainMenu.Matkul.name) {
+                Column(modifier = Modifier.wrapContentHeight()) {
+                    ScheduleCard()
+                }
+            }
+            composable(route = MainMenu.Tugas.name) {
+                Column(modifier = Modifier.wrapContentHeight()) {
+                    TugasScreen()
+                }
+            }
+            composable(route = MainMenu.Arsip.name) {
+                Column(modifier = Modifier.wrapContentHeight()) {
+                    ArsipContent()
+                }
+            }
+            composable(route = MainMenu.Profil.name) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    ProfileCard { onSignOut() }
+                }
+            }
+
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ArsipContent() {
+    val navController = rememberNavController()
+    // Get current back stack entry
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    // Get the name of the current screen
+    val currentScreen = WeeklyScreens.valueOf(
+        backStackEntry?.destination?.route ?: WeeklyScreens.M2.name
+    )
+
+    Scaffold(topBar = {
+        @OptIn(ExperimentalMaterial3Api::class) TopAppBar(title = {
+            Text("Tugas $currentScreen")
+        })
+    }, bottomBar = {
+        val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+        currentRoute ?: WeeklyScreens.M2.name
+
+        BottomAppBar(actions = {
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items(WeeklyScreens.entries) { item ->
+                    TextButton(
+                        onClick = {
+                            try {
+                                navController.navigate(item.name) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            } catch (e: Exception) {
+                                navController.navigate(WeeklyScreens.M2.name) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        }, colors = ButtonDefaults.textButtonColors(
+                            contentColor = if (currentRoute == item.name) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                Color.Gray
+                            }
+                        )
+                    ) {
+                        Text("$item", fontSize = 20.sp)
+                    }
+                }
+            }
+        })
+
+    }, modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = WeeklyScreens.M2.name,
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
@@ -280,28 +350,6 @@ fun AppContent(onSignOut: () -> Unit) {
                         .padding(horizontal = 16.dp)
                 )
             }
-            composable(route = WeeklyScreens.M5.name) {
-                M5Screen(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    onLaunchListActivity = {
-                        // Lambda to launch ListActivity
-                        val intent = Intent(context, ListActivity::class.java)
-                        context.startActivity(intent)
-                    })
-            }
-            composable(route = WeeklyScreens.M6.name) {
-                M6Screen(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    onLaunchListActivity = {
-                        // Lambda to launch ListActivity
-                        val intent = Intent(context, ProfileActivity::class.java)
-                        context.startActivity(intent)
-                    })
-            }
         }
     }
 }
@@ -319,9 +367,7 @@ fun LoginScreen(onLoginSuccess: (FirebaseUser?) -> Unit) {
 
     // Google Sign-In Options (GSO)
     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken(context.getString(R.string.default_web_client_id))
-        .requestEmail()
-        .build()
+        .requestIdToken(context.getString(R.string.default_web_client_id)).requestEmail().build()
 
     // Google Sign-In Client
     val googleSignInClient = GoogleSignIn.getClient(context, gso)
@@ -358,25 +404,23 @@ private fun handleSignInResult(result: ActivityResult, onLoginSuccess: (Firebase
 
 private fun firebaseAuthWithGoogle(idToken: String, onComplete: (FirebaseUser?) -> Unit) {
     val credential = GoogleAuthProvider.getCredential(idToken, null)
-    Firebase.auth.signInWithCredential(credential)
-        .addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                // Sign in success
-                Log.d("LoginScreen", "signInWithCredential:success")
-                onComplete(Firebase.auth.currentUser) // Pass FirebaseUser
-            } else {
-                // If sign in fails
-                Log.w("LoginScreen", "signInWithCredential:failure", task.exception)
-                onComplete(null) // Pass null on failure
-            }
+    Firebase.auth.signInWithCredential(credential).addOnCompleteListener { task ->
+        if (task.isSuccessful) {
+            // Sign in success
+            Log.d("LoginScreen", "signInWithCredential:success")
+            onComplete(Firebase.auth.currentUser) // Pass FirebaseUser
+        } else {
+            // If sign in fails
+            Log.w("LoginScreen", "signInWithCredential:failure", task.exception)
+            onComplete(null) // Pass null on failure
         }
+    }
 }
 
 @Composable
 fun M2Screen() {
     Column(
-        modifier = Modifier
-            .padding(horizontal = 16.dp),
+        modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         UpdatableElement()
@@ -389,7 +433,7 @@ fun M3Screen(modifier: Modifier = Modifier) {
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        NamaMhs("Hugo Alfedo Putra", "225150201111013")
+//        NamaMhs("Hugo Alfedo Putra", "225150201111013")
         Text("Latihan TextField banyak", fontSize = 16.sp)
         ManyFieldsElement()
     }
@@ -401,7 +445,7 @@ fun M4Screen(modifier: Modifier = Modifier) {
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        NamaMhs("Hugo Alfedo Putra", "225150201111013")
+//        NamaMhs("Hugo Alfedo Putra", "225150201111013")
         Text("Latihan UI State", fontSize = 16.sp)
         ManyStatefulFieldsElement()
     }
@@ -414,8 +458,7 @@ fun M5Screen(modifier: Modifier = Modifier, onLaunchListActivity: () -> Unit) {
         modifier = modifier // Optional: Make the Row/Column fill the width
     ) {
         Button(
-            onClick = onLaunchListActivity,
-            modifier = Modifier.fillMaxWidth()
+            onClick = onLaunchListActivity, modifier = Modifier.fillMaxWidth()
         ) {
             Text("Buka ListActivity")
         }
@@ -424,15 +467,26 @@ fun M5Screen(modifier: Modifier = Modifier, onLaunchListActivity: () -> Unit) {
 
 @Composable
 fun M6Screen(modifier: Modifier = Modifier, onLaunchListActivity: () -> Unit) {
-    // Example Button to launch ListActivity (if needed)
     Column(
-        modifier = modifier // Optional: Make the Row/Column fill the width
+        modifier = modifier
     ) {
         Button(
-            onClick = onLaunchListActivity,
-            modifier = Modifier.fillMaxWidth()
+            onClick = onLaunchListActivity, modifier = Modifier.fillMaxWidth()
         ) {
             Text("Buka Profilku")
+        }
+    }
+}
+
+@Composable
+fun M8Screen(modifier: Modifier = Modifier, onLaunchListActivity: () -> Unit) {
+    Column(
+        modifier = modifier
+    ) {
+        Button(
+            onClick = onLaunchListActivity, modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Buka Tugas-Tugasku")
         }
     }
 }
@@ -457,8 +511,7 @@ fun ManyStatefulFieldsElement() {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        TextField(
-            value = storageName,
+        TextField(value = storageName,
             onValueChange = {
                 if (it.length <= 50) {
                     storageName = it
@@ -471,13 +524,10 @@ fun ManyStatefulFieldsElement() {
                 .fillMaxWidth(),
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = "Your name"
+                    imageVector = Icons.Filled.Person, contentDescription = "Your name"
                 )
-            }
-        )
-        TextField(
-            value = storageId,
+            })
+        TextField(value = storageId,
             onValueChange = {
                 if (it.length <= 15) {
                     storageId = it
@@ -491,33 +541,27 @@ fun ManyStatefulFieldsElement() {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Filled.Info,
-                    contentDescription = "Your student ID"
+                    imageVector = Icons.Filled.Info, contentDescription = "Your student ID"
                 )
-            }
-        )
+            })
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .combinedClickable(
-                    onClick = {},
-                    onLongClick = {
-                        Toast
-                            .makeText(
-                                context,
-                                if (isNameValid && isIdValid) "$storageName ($storageId)" else "Silakan isi data diri Anda!",
-                                Toast.LENGTH_SHORT
-                            )
-                            .show()
-                    }
-                ),
+                .combinedClickable(onClick = {}, onLongClick = {
+                    Toast
+                        .makeText(
+                            context,
+                            if (isNameValid && isIdValid) "$storageName ($storageId)" else "Silakan isi data diri Anda!",
+                            Toast.LENGTH_SHORT
+                        )
+                        .show()
+                }),
             content = {
                 Box(
                     contentAlignment = Alignment.Center // Center content in Box
                 ) {
                     Text(
-                        text = "Preview",
-                        modifier = Modifier.padding(8.dp)
+                        text = "Preview", modifier = Modifier.padding(8.dp)
                     )
                 }
             },
@@ -533,10 +577,7 @@ fun ManyStatefulFieldsElement() {
                 storageId = ""
                 isNameValid = false
                 isIdValid = false
-            },
-            modifier = Modifier
-                .fillMaxWidth(),
-            enabled = (isNameValid && isIdValid)
+            }, modifier = Modifier.fillMaxWidth(), enabled = (isNameValid && isIdValid)
         ) {
             Text("Submit")
         }
@@ -561,8 +602,7 @@ fun ManyFieldsElement() {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        TextField(
-            value = storageName,
+        TextField(value = storageName,
             onValueChange = {
                 if (it.length <= 50) {
                     storageName = it
@@ -574,13 +614,10 @@ fun ManyFieldsElement() {
                 .fillMaxWidth(),
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = "Your name"
+                    imageVector = Icons.Filled.Person, contentDescription = "Your name"
                 )
-            }
-        )
-        TextField(
-            value = storageId,
+            })
+        TextField(value = storageId,
             onValueChange = {
                 if (it.length <= 15) {
                     storageId = it
@@ -593,11 +630,9 @@ fun ManyFieldsElement() {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Filled.Info,
-                    contentDescription = "Your student ID"
+                    imageVector = Icons.Filled.Info, contentDescription = "Your student ID"
                 )
-            }
-        )
+            })
         Button(
             onClick = {
                 credName = storageName
@@ -605,8 +640,7 @@ fun ManyFieldsElement() {
                 storageName = ""
                 storageId = ""
                 focusManager.clearFocus()
-            },
-            modifier = Modifier.fillMaxWidth()
+            }, modifier = Modifier.fillMaxWidth()
         ) {
             Text("Submit")
         }
@@ -623,15 +657,19 @@ fun ManyFieldsElement() {
 }
 
 @Composable
-fun NamaMhs(name: String, nim: String, modifier: Modifier = Modifier) {
+fun NamaMhs(name: String, nim: String, modifier: Modifier = Modifier, fontSize: TextUnit = 16.sp) {
     Column(modifier = Modifier) {
         Text(
             text = name,
-            modifier = modifier
+            modifier = modifier,
+            fontSize = fontSize,
+            style = TextStyle(lineHeight = 1.em)
         )
         Text(
             text = nim,
-            modifier = modifier
+            modifier = modifier,
+            fontSize = fontSize,
+            style = TextStyle(lineHeight = 1.em)
         )
     }
 }
@@ -646,7 +684,7 @@ fun UpdatableElement() {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.width(IntrinsicSize.Max)
     ) {
-        NamaMhs("Hugo Alfedo Putra", "225150201111013")
+//        NamaMhs("Hugo Alfedo Putra", "225150201111013")
         Text("Tuliskan teks di kolom di bawah ini agar muncul di kolom paling bawah!")
         TextField(
             value = text,
@@ -662,8 +700,7 @@ fun UpdatableElement() {
                 textDisplay = textValue
                 text = ""
                 focusManager.clearFocus()
-            },
-            modifier = Modifier.fillMaxWidth()
+            }, modifier = Modifier.fillMaxWidth()
         ) {
             Text("Isikan!")
         }

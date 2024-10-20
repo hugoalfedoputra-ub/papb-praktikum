@@ -24,6 +24,9 @@ firebaseFirestore = "25.1.0"
 activity = "1.9.2"
 playServicesAuth = "21.2.0"
 retrofit = "2.11.0"
+runtimeLivedata = "1.7.4"
+navigationFragmentKtx = "2.8.2"
+navigationUiKtx = "2.8.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -58,6 +61,9 @@ firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
+androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
+androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

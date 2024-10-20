@@ -2,6 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.google.gms.google.services)
+//    id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
+    kotlin("kapt") version "2.0.21"
+    id("kotlin-parcelize")
 }
 
 android {
@@ -75,6 +79,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.activity)
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -99,4 +106,11 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation("io.coil-kt:coil:2.7.0")
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+// To use Kotlin annotation processing tool (kapt)
+    kapt("androidx.room:room-compiler:2.6.1")
+//    ksp("androidx.room:room-compiler:2.6.1")
+//    kapt("groupId:artifactId:version")
 }

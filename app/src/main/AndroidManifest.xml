@@ -15,18 +15,22 @@
         android:theme="@style/Theme.CH2P"
         tools:targetApi="31">
         <activity
-            android:name=".ProfileActivity"
+            android:name=".view.TugasActivity"
             android:exported="false" />
         <activity
-            android:name=".ListActivity"
+            android:name=".view.ProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".view.ListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".view.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.CH2P">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

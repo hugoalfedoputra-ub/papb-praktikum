@@ -1,4 +1,4 @@
-package com.example.ch2p
+package com.example.ch2p.view
 
 import android.app.Activity
 import android.content.Intent
@@ -34,8 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.rememberNavController
 import com.example.ch2p.ui.theme.CH2PTheme
+import com.example.ch2p.view.model.ListViewModel
 
 class ListActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

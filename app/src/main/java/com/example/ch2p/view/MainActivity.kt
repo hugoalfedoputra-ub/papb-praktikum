@@ -1,6 +1,9 @@
 package com.example.ch2p.view
 
+import android.Manifest
 import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -9,6 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -50,6 +54,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,6 +76,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -86,6 +92,8 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 enum class WeeklyScreens {
     M2, M3, M4,
@@ -101,6 +109,44 @@ val mainMenuIcons: List<ImageVector> =
 
 
 class MainActivity : ComponentActivity() {
+
+    // Key Point: Managing Camera Permission State
+    private val _isCameraPermissionGranted = MutableStateFlow(false)
+    val isCameraPermissionGranted: StateFlow<Boolean> = _isCameraPermissionGranted
+
+    // Declare a launcher for the camera permission request, handling the permission result
+    private val cameraPermissionRequestLauncher: ActivityResultLauncher<String> =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                // Permission granted, update the state
+                _isCameraPermissionGranted.value = true
+            } else {
+                // Permission denied: inform the user to enable it through settings
+                Toast.makeText(
+                    this,
+                    "Go to settings and enable camera permission to use this feature",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+    // Checks camera permission and either starts the camera directly or requests permission
+    fun handleCameraPermission() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // Permission is already granted, update the state
+                _isCameraPermissionGranted.value = true
+            }
+
+            else -> {
+                // Permission is not granted: request it
+                cameraPermissionRequestLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
 
     private lateinit var auth: FirebaseAuth
 
@@ -120,14 +166,13 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun MainScreenContent() {
+        val cameraPermissionGranted = isCameraPermissionGranted.collectAsState().value
         val auth = Firebase.auth
         val isLoggedIn = remember { mutableStateOf(auth.currentUser) }
         var showSignOutDialog by remember { mutableStateOf(false) }
 
         if (isLoggedIn.value != null) {
-            AppContent {
-                showSignOutDialog = true
-            }
+            AppContent(cameraPermissionGranted, onSignOut = { showSignOutDialog = true }, onRequestCameraPermission = { handleCameraPermission() })
         } else {
             LoginScreen {
                 isLoggedIn.value = it
@@ -160,7 +205,7 @@ fun SignOutConfirmationDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppContent(onSignOut: () -> Unit) {
+fun AppContent(cameraPermissionGranted: Boolean, onSignOut: () -> Unit, onRequestCameraPermission: () -> Unit) {
     val navController = rememberNavController()
     // Get current back stack entry
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -247,7 +292,30 @@ fun AppContent(onSignOut: () -> Unit) {
             }
             composable(route = MainMenu.Tugas.name) {
                 Column(modifier = Modifier.wrapContentHeight()) {
-                    TugasScreen()
+//                    Box(modifier = Modifier.fillMaxSize()) {
+//                        // Conditional UI rendering based on camera permission state
+//                        if (cameraPermissionGranted) {
+//                            // If permission is granted, display the camera preview
+//                            CameraPreview()
+//                        } else {
+//                            // If permission is not granted, display a button to request camera permission
+//                            Button(
+//                                onClick = {
+//                                    // Invoke the method from BaseActivity to handle permission request
+//                                    onRequestCameraPermission()
+//                                },
+//                                modifier = Modifier.align(Alignment.Center)
+//                            ) {
+//                                Text(text = "Open Camera")
+//                            }
+//                        }
+//                    }
+//                    Button(onClick = {
+//                        context.startActivity(Intent(context, CameraXActivity::class.java))
+//                    }) {
+//                        Text("Open Camera")
+//                    }
+                    TugasScreen(Modifier, cameraPermissionGranted) { onRequestCameraPermission() }
                 }
             }
             composable(route = MainMenu.Arsip.name) {

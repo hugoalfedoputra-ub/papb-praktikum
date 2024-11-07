@@ -1,26 +1,22 @@
 package com.example.ch2p.data.model.local;
 
+import android.net.Uri
 import android.os.Parcelable;
-
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import kotlinx.parcelize.Parcelize;
-import java.util.Date
-
-
 import androidx.room.TypeConverter
-import java.util.*
 
-class DateConverter {
+class UriConverter {
     @TypeConverter
-    fun fromTimestamp(value: Long?): Date? {
-        return value?.let { Date(it) }
+    fun fromUri(uri: Uri?): String? {
+        return uri?.toString()
     }
 
     @TypeConverter
-    fun dateToTimestamp(date: Date?): Long? {
-        return date?.time
+    fun toUri(uriString: String?): Uri? {
+        return uriString?.let { Uri.parse(it) }
     }
 }
 
@@ -32,5 +28,6 @@ class Tugas(
     @ColumnInfo(name = "description") var description: String,
     @ColumnInfo(name = "is_done") var isDone: Boolean,
     @ColumnInfo(name = "date_added") var dateAdded: Long? = 0L,
-    @ColumnInfo(name = "date_due") var dateDue: Long? = 0L
+    @ColumnInfo(name = "date_due") var dateDue: Long? = 0L,
+    @ColumnInfo(name = "image_uri") var imageUri: Uri? = null
 ) : Parcelable
